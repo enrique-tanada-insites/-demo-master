@@ -1,0 +1,519 @@
+---
+slug: drivers
+---
+{% raw %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drivers</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 220px;
+      height: 100vh;
+      background: #1a1a2e;
+      padding: 32px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      padding: 0 12px 24px;
+      letter-spacing: -0.3px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #8892a4;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      text-decoration: none;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: #ffffff14;
+      color: #fff;
+    }
+
+    .nav-item .icon { font-size: 16px; }
+
+    .main {
+      margin-left: 220px;
+      padding: 40px;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+
+    .search-wrap .icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .search-input {
+      padding: 8px 12px 8px 34px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #1a1a2e;
+      background: #fff;
+      width: 240px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus { border-color: #4f46e5; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s;
+    }
+
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-primary:hover { background: #4338ca; }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead th {
+      padding: 12px 20px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9ca3af;
+      background: #f9fafb;
+      border-bottom: 1px solid #f3f4f6;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    thead th:hover { color: #4f46e5; }
+
+    thead th .sort-icon {
+      display: inline-block;
+      margin-left: 4px;
+      opacity: 0.4;
+      font-size: 10px;
+    }
+
+    thead th.sorted .sort-icon { opacity: 1; color: #4f46e5; }
+
+    tbody tr {
+      border-bottom: 1px solid #f3f4f6;
+      transition: background 0.1s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f9fafb; }
+
+    td {
+      padding: 14px 20px;
+      font-size: 14px;
+      color: #374151;
+      vertical-align: middle;
+    }
+
+    .driver-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .driver-name {
+      font-weight: 500;
+      color: #1a1a2e;
+      font-size: 14px;
+    }
+
+    .driver-license {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 1px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-available { background: #d1fae5; color: #065f46; }
+    .badge-on-trip   { background: #dbeafe; color: #1e40af; }
+    .badge-offline   { background: #f3f4f6; color: #6b7280; }
+
+    .vehicle-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .vehicle-badge.sedan  { background: #ede9fe; color: #5b21b6; }
+    .vehicle-badge.suv    { background: #fee2e2; color: #991b1b; }
+    .vehicle-badge.van    { background: #dbeafe; color: #1e40af; }
+    .vehicle-badge.truck  { background: #fef3c7; color: #92400e; }
+
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .rating .star { color: #f59e0b; font-size: 13px; }
+
+    .trips-count {
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
+    .secondary-text {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 1px;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #9ca3af;
+      font-size: 16px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      transition: background 0.1s, color 0.1s;
+    }
+
+    .action-btn:hover { background: #f3f4f6; color: #4f46e5; }
+
+    .table-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-top: 1px solid #f3f4f6;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .pagination { display: flex; gap: 4px; }
+
+    .page-btn {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      font-size: 13px;
+      cursor: pointer;
+      background: #fff;
+      color: #374151;
+      transition: background 0.1s, border-color 0.1s;
+    }
+
+    .page-btn:hover { background: #f3f4f6; }
+    .page-btn.active { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+    .page-btn:disabled { opacity: 0.4; cursor: default; }
+
+    .empty {
+      padding: 60px 20px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <div class="sidebar-logo">&#9670; Analytics</div>
+      <a href="/dashboard" class="nav-item"><span class="icon">&#9632;</span> Dashboard</a>
+      <a href="/reports"   class="nav-item"><span class="icon">&#9675;</span> Reports</a>
+      <a href="/users"     class="nav-item"><span class="icon">&#9651;</span> Users</a>
+      <a href="/drivers"   class="nav-item active"><span class="icon">&#9654;</span> Drivers</a>
+      <a href="/settings"  class="nav-item"><span class="icon">&#9670;</span> Settings</a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Drivers</div>
+          <div class="page-subtitle">{{ filteredDrivers.length }} driver{{ filteredDrivers.length !== 1 ? 's' : '' }} found</div>
+        </div>
+        <div class="toolbar">
+          <div class="search-wrap">
+            <span class="icon">&#9906;</span>
+            <input
+              class="search-input"
+              v-model="search"
+              placeholder="Search drivers…"
+              type="text"
+            />
+          </div>
+          <button class="btn btn-primary">+ Add Driver</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th @click="sortBy('name')" :class="{ sorted: sortKey === 'name' }">
+                Driver <span class="sort-icon">{{ sortKey === 'name' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              </th>
+              <th @click="sortBy('vehicle')" :class="{ sorted: sortKey === 'vehicle' }">
+                Vehicle <span class="sort-icon">{{ sortKey === 'vehicle' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              </th>
+              <th @click="sortBy('status')" :class="{ sorted: sortKey === 'status' }">
+                Status <span class="sort-icon">{{ sortKey === 'status' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              </th>
+              <th @click="sortBy('rating')" :class="{ sorted: sortKey === 'rating' }">
+                Rating <span class="sort-icon">{{ sortKey === 'rating' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              </th>
+              <th @click="sortBy('trips')" :class="{ sorted: sortKey === 'trips' }">
+                Trips <span class="sort-icon">{{ sortKey === 'trips' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              </th>
+              <th @click="sortBy('city')" :class="{ sorted: sortKey === 'city' }">
+                Location <span class="sort-icon">{{ sortKey === 'city' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              </th>
+              <th @click="sortBy('joined')" :class="{ sorted: sortKey === 'joined' }">
+                Joined <span class="sort-icon">{{ sortKey === 'joined' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              </th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="pagedDrivers.length === 0">
+              <td colspan="8"><div class="empty">No drivers match your search.</div></td>
+            </tr>
+            <tr v-for="driver in pagedDrivers" :key="driver.id">
+              <td>
+                <div class="driver-cell">
+                  <div class="avatar" :style="{ background: driver.color }">{{ initials(driver.name) }}</div>
+                  <div>
+                    <div class="driver-name">{{ driver.name }}</div>
+                    <div class="driver-license">{{ driver.license }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="vehicle-badge" :class="driver.vehicleType.toLowerCase()">{{ driver.vehicleType }}</span>
+                <div class="secondary-text">{{ driver.vehicle }}</div>
+              </td>
+              <td>
+                <span class="badge" :class="'badge-' + driver.status.toLowerCase().replace(' ', '-')">{{ driver.status }}</span>
+              </td>
+              <td>
+                <div class="rating">
+                  <span class="star">&#9733;</span>
+                  {{ driver.rating.toFixed(1) }}
+                </div>
+              </td>
+              <td>
+                <div class="trips-count">{{ driver.trips.toLocaleString() }}</div>
+              </td>
+              <td>
+                <div>{{ driver.city }}</div>
+                <div class="secondary-text">{{ driver.country }}</div>
+              </td>
+              <td>{{ driver.joined }}</td>
+              <td>
+                <button class="action-btn" title="Edit">&#9998;</button>
+                <button class="action-btn" title="Delete">&#10006;</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="table-footer">
+          <span>Showing {{ pageStart }}–{{ pageEnd }} of {{ filteredDrivers.length }}</span>
+          <div class="pagination">
+            <button class="page-btn" :disabled="page === 1" @click="page--">&#8249;</button>
+            <button
+              v-for="p in totalPages" :key="p"
+              class="page-btn" :class="{ active: p === page }"
+              @click="page = p"
+            >{{ p }}</button>
+            <button class="page-btn" :disabled="page === totalPages" @click="page++">&#8250;</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    const COLORS = ['#4f46e5','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#db2777','#0284c7','#16a34a','#ca8a04','#9333ea','#0e7490'];
+
+    const DRIVERS = [
+      { id:1,  name:'Marcus Rivera',   license:'DL-4821-TX', vehicle:'Toyota Camry 2022',    vehicleType:'Sedan', status:'Available', rating:4.9, trips:1284, joined:'Jan 12, 2024', city:'Houston',      country:'USA' },
+      { id:2,  name:'Priya Nair',      license:'DL-7703-CA', vehicle:'Honda CR-V 2021',       vehicleType:'SUV',   status:'On Trip',   rating:4.7, trips:986,  joined:'Feb 3, 2024',  city:'Los Angeles',  country:'USA' },
+      { id:3,  name:'James Okoro',     license:'DL-1195-NY', vehicle:'Ford Transit 2023',     vehicleType:'Van',   status:'Offline',   rating:4.5, trips:542,  joined:'Mar 17, 2024', city:'New York',     country:'USA' },
+      { id:4,  name:'Sofia Lindqvist', license:'DL-3340-SE', vehicle:'Volvo XC60 2022',       vehicleType:'SUV',   status:'Available', rating:4.8, trips:2103, joined:'Jan 28, 2024', city:'Stockholm',    country:'Sweden' },
+      { id:5,  name:'Kwame Asante',    license:'DL-8872-GH', vehicle:'Toyota HiAce 2021',     vehicleType:'Van',   status:'On Trip',   rating:4.6, trips:763,  joined:'Apr 5, 2024',  city:'Accra',        country:'Ghana' },
+      { id:6,  name:'Elena Vasquez',   license:'DL-2214-MX', vehicle:'Nissan Sentra 2023',    vehicleType:'Sedan', status:'Available', rating:4.9, trips:1657, joined:'Feb 20, 2024', city:'Mexico City',  country:'Mexico' },
+      { id:7,  name:'Tariq Hussain',   license:'DL-5509-PK', vehicle:'Suzuki Cultus 2022',    vehicleType:'Sedan', status:'Offline',   rating:4.3, trips:318,  joined:'May 11, 2024', city:'Karachi',      country:'Pakistan' },
+      { id:8,  name:'Aisha Mwangi',    license:'DL-6631-KE', vehicle:'Mitsubishi Pajero 2021', vehicleType:'SUV',  status:'Available', rating:4.7, trips:894,  joined:'Mar 30, 2024', city:'Nairobi',      country:'Kenya' },
+      { id:9,  name:'Chen Wei',        license:'DL-9904-SG', vehicle:'Toyota Alphard 2023',   vehicleType:'Van',   status:'On Trip',   rating:4.8, trips:2451, joined:'Jan 7, 2024',  city:'Singapore',    country:'Singapore' },
+      { id:10, name:'Lucas Ferreira',  license:'DL-1122-BR', vehicle:'Volkswagen Gol 2022',   vehicleType:'Sedan', status:'Available', rating:4.6, trips:1102, joined:'Jun 14, 2024', city:'São Paulo',    country:'Brazil' },
+      { id:11, name:'Nadia Petrov',    license:'DL-7785-RU', vehicle:'Lada Vesta 2021',       vehicleType:'Sedan', status:'Offline',   rating:4.4, trips:671,  joined:'May 22, 2024', city:'Moscow',       country:'Russia' },
+      { id:12, name:'Owen Blackwood',  license:'DL-3367-AU', vehicle:'Ford Ranger 2023',      vehicleType:'Truck', status:'On Trip',   rating:4.7, trips:1389, joined:'Feb 9, 2024',  city:'Sydney',       country:'Australia' },
+    ].map((d, i) => ({ ...d, color: COLORS[i % COLORS.length] }));
+
+    const PER_PAGE = 8;
+
+    createApp({
+      setup() {
+        const search  = ref('');
+        const sortKey = ref('name');
+        const sortDir = ref('asc');
+        const page    = ref(1);
+
+        function initials(name) {
+          return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+        }
+
+        function sortBy(key) {
+          if (sortKey.value === key) {
+            sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortKey.value = key;
+            sortDir.value = 'asc';
+          }
+          page.value = 1;
+        }
+
+        const filteredDrivers = computed(() => {
+          const q = search.value.toLowerCase();
+          const list = q
+            ? DRIVERS.filter(d =>
+                d.name.toLowerCase().includes(q) ||
+                d.license.toLowerCase().includes(q) ||
+                d.vehicle.toLowerCase().includes(q) ||
+                d.city.toLowerCase().includes(q)
+              )
+            : [...DRIVERS];
+
+          list.sort((a, b) => {
+            const av = a[sortKey.value] ?? '';
+            const bv = b[sortKey.value] ?? '';
+            if (typeof av === 'number' && typeof bv === 'number') {
+              return sortDir.value === 'asc' ? av - bv : bv - av;
+            }
+            return sortDir.value === 'asc'
+              ? String(av).localeCompare(String(bv))
+              : String(bv).localeCompare(String(av));
+          });
+          return list;
+        });
+
+        const totalPages = computed(() => Math.max(1, Math.ceil(filteredDrivers.value.length / PER_PAGE)));
+
+        const pagedDrivers = computed(() => {
+          const start = (page.value - 1) * PER_PAGE;
+          return filteredDrivers.value.slice(start, start + PER_PAGE);
+        });
+
+        const pageStart = computed(() => filteredDrivers.value.length === 0 ? 0 : (page.value - 1) * PER_PAGE + 1);
+        const pageEnd   = computed(() => Math.min(page.value * PER_PAGE, filteredDrivers.value.length));
+
+        return { search, sortKey, sortDir, page, filteredDrivers, pagedDrivers, totalPages, pageStart, pageEnd, initials, sortBy };
+      },
+    }).mount('#app');
+  </script>
+</body>
+</html>
+{% endraw %}
