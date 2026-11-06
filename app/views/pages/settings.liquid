@@ -1,0 +1,464 @@
+---
+slug: settings
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 220px;
+      height: 100vh;
+      background: #1a1a2e;
+      padding: 32px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      padding: 0 12px 24px;
+      letter-spacing: -0.3px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #8892a4;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      text-decoration: none;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: #ffffff14;
+      color: #fff;
+    }
+
+    .nav-item .icon { font-size: 16px; }
+
+    .main {
+      margin-left: 220px;
+      padding: 40px;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .settings-nav {
+      background: #fff;
+      border-radius: 12px;
+      padding: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+
+    .settings-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #6b7280;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+    }
+
+    .settings-nav-item:hover { background: #f3f4f6; color: #1a1a2e; }
+    .settings-nav-item.active { background: #ede9fe; color: #4f46e5; font-weight: 600; }
+
+    .settings-panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+
+    .panel-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-bottom: 4px;
+    }
+
+    .panel-desc {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 28px;
+    }
+
+    .divider {
+      height: 1px;
+      background: #f3f4f6;
+      margin: 24px 0;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .field-row.full { grid-template-columns: 1fr; }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #1a1a2e;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+    }
+
+    .field textarea { resize: vertical; min-height: 80px; }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus { border-color: #4f46e5; }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+    }
+
+    .toggle-info { flex: 1; }
+
+    .toggle-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1a1a2e;
+    }
+
+    .toggle-desc {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #e5e7eb;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      top: 3px; left: 3px;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+
+    .toggle input:checked + .toggle-slider { background: #4f46e5; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    .btn-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .btn {
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn-secondary { background: #f3f4f6; color: #374151; }
+    .btn-primary { background: #4f46e5; color: #fff; }
+
+    .saved-toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,.2);
+      transition: opacity 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">&#9670; Analytics</div>
+      <a href="/dashboard" class="nav-item"><span class="icon">&#9632;</span> Dashboard</a>
+      <a href="/reports"   class="nav-item"><span class="icon">&#9675;</span> Reports</a>
+      <a href="/users"     class="nav-item"><span class="icon">&#9651;</span> Users</a>
+      <a href="/settings"  class="nav-item active"><span class="icon">&#9670;</span> Settings</a>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="page-header">
+        <div class="page-title">Settings</div>
+        <div class="page-subtitle">Manage your account and preferences.</div>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Settings sub-nav -->
+        <nav class="settings-nav">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            class="settings-nav-item"
+            :class="{ active: activeTab === tab.id }"
+            @click="activeTab = tab.id"
+          >
+            <span>{{ tab.icon }}</span> {{ tab.label }}
+          </button>
+        </nav>
+
+        <!-- Profile tab -->
+        <div v-if="activeTab === 'profile'" class="settings-panel">
+          <div class="panel-title">Profile</div>
+          <div class="panel-desc">Update your personal information.</div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>First name</label>
+              <input v-model="profile.firstName" type="text" />
+            </div>
+            <div class="field">
+              <label>Last name</label>
+              <input v-model="profile.lastName" type="text" />
+            </div>
+          </div>
+          <div class="field-row full">
+            <div class="field">
+              <label>Email</label>
+              <input v-model="profile.email" type="email" />
+            </div>
+          </div>
+          <div class="field-row full">
+            <div class="field">
+              <label>Bio</label>
+              <textarea v-model="profile.bio" placeholder="Tell us a little about yourself..."></textarea>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-secondary" @click="reset">Cancel</button>
+            <button class="btn btn-primary" @click="save">Save changes</button>
+          </div>
+        </div>
+
+        <!-- Notifications tab -->
+        <div v-if="activeTab === 'notifications'" class="settings-panel">
+          <div class="panel-title">Notifications</div>
+          <div class="panel-desc">Choose what you want to be notified about.</div>
+
+          <div v-for="(item, i) in notifications" :key="i">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-label">{{ item.label }}</div>
+                <div class="toggle-desc">{{ item.desc }}</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" v-model="item.enabled" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div v-if="i < notifications.length - 1" class="divider"></div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" @click="save">Save changes</button>
+          </div>
+        </div>
+
+        <!-- Security tab -->
+        <div v-if="activeTab === 'security'" class="settings-panel">
+          <div class="panel-title">Security</div>
+          <div class="panel-desc">Manage your password and security preferences.</div>
+
+          <div class="field-row full">
+            <div class="field">
+              <label>Current password</label>
+              <input type="password" placeholder="••••••••" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>New password</label>
+              <input type="password" placeholder="••••••••" />
+            </div>
+            <div class="field">
+              <label>Confirm password</label>
+              <input type="password" placeholder="••••••••" />
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div v-for="(item, i) in security" :key="i">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-label">{{ item.label }}</div>
+                <div class="toggle-desc">{{ item.desc }}</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" v-model="item.enabled" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div v-if="i < security.length - 1" class="divider"></div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-secondary">Cancel</button>
+            <button class="btn btn-primary" @click="save">Update password</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Toast -->
+    <div v-if="showToast" class="saved-toast">&#10003; Changes saved</div>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive } = Vue;
+
+    createApp({
+      setup() {
+        const activeTab = ref('profile');
+
+        const tabs = [
+          { id: 'profile',       label: 'Profile',       icon: '👤' },
+          { id: 'notifications', label: 'Notifications', icon: '🔔' },
+          { id: 'security',      label: 'Security',      icon: '🔒' },
+        ];
+
+        const profile = reactive({
+          firstName: 'Alex',
+          lastName: 'Johnson',
+          email: 'alex.johnson@example.com',
+          bio: '',
+        });
+
+        const notifications = reactive([
+          { label: 'Email digests',       desc: 'Receive a weekly summary of your analytics.',  enabled: true  },
+          { label: 'Revenue alerts',      desc: 'Get notified when revenue crosses a threshold.', enabled: true  },
+          { label: 'New user signups',    desc: 'Alerts when new users join your platform.',      enabled: false },
+          { label: 'Product updates',     desc: 'News about features and improvements.',           enabled: true  },
+        ]);
+
+        const security = reactive([
+          { label: 'Two-factor authentication', desc: 'Add an extra layer of security to your account.', enabled: false },
+          { label: 'Login notifications',       desc: 'Get an email whenever a new login is detected.',   enabled: true  },
+        ]);
+
+        const showToast = ref(false);
+        let toastTimer = null;
+
+        function save() {
+          showToast.value = true;
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => { showToast.value = false; }, 2500);
+        }
+
+        function reset() {
+          profile.firstName = 'Alex';
+          profile.lastName  = 'Johnson';
+          profile.email     = 'alex.johnson@example.com';
+          profile.bio       = '';
+        }
+
+        return { activeTab, tabs, profile, notifications, security, showToast, save, reset };
+      },
+    }).mount('#app');
+  </script>
+</body>
+</html>
