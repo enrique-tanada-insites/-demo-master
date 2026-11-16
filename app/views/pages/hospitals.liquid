@@ -1,0 +1,235 @@
+---
+slug: hospitals
+---
+{% raw %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospitals</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 220px; height: 100vh; background: #1a1a2e; padding: 32px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .sidebar-logo { font-size: 18px; font-weight: 700; color: #fff; padding: 0 12px 24px; letter-spacing: -0.3px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 14px; color: #8892a4; cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; }
+    .nav-item:hover, .nav-item.active { background: #ffffff14; color: #fff; }
+    .nav-item .icon { font-size: 16px; }
+    .main { margin-left: 220px; padding: 40px; min-height: 100vh; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .page-title { font-size: 24px; font-weight: 700; color: #1a1a2e; }
+    .page-subtitle { font-size: 14px; color: #6b7280; margin-top: 2px; }
+    .toolbar { display: flex; align-items: center; gap: 12px; }
+    .search-wrap { position: relative; }
+    .search-wrap .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px; pointer-events: none; }
+    .search-input { padding: 8px 12px 8px 34px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; color: #1a1a2e; background: #fff; width: 240px; outline: none; transition: border-color 0.15s; }
+    .search-input:focus { border-color: #4f46e5; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: background 0.15s; }
+    .btn-primary { background: #4f46e5; color: #fff; } .btn-primary:hover { background: #4338ca; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: 12px 20px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; background: #f9fafb; border-bottom: 1px solid #f3f4f6; cursor: pointer; user-select: none; white-space: nowrap; }
+    thead th:hover { color: #4f46e5; }
+    thead th .sort-icon { display: inline-block; margin-left: 4px; opacity: 0.4; font-size: 10px; }
+    thead th.sorted .sort-icon { opacity: 1; color: #4f46e5; }
+    tbody tr { border-bottom: 1px solid #f3f4f6; transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; } tbody tr:hover { background: #f9fafb; }
+    td { padding: 14px 20px; font-size: 14px; color: #374151; vertical-align: middle; }
+    .hospital-cell { display: flex; align-items: center; gap: 12px; }
+    .hospital-icon { width: 40px; height: 40px; border-radius: 10px; background: #fce7f3; color: #9d174d; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .hospital-name { font-weight: 500; color: #1a1a2e; font-size: 14px; }
+    .hospital-id { font-size: 12px; color: #9ca3af; margin-top: 1px; }
+    .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .badge-active    { background: #d1fae5; color: #065f46; }
+    .badge-inactive  { background: #f3f4f6; color: #6b7280; }
+    .badge-critical  { background: #fee2e2; color: #991b1b; }
+    .type-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+    .type-badge.general   { background: #dbeafe; color: #1e40af; }
+    .type-badge.specialty { background: #ede9fe; color: #5b21b6; }
+    .type-badge.children  { background: #fce7f3; color: #9d174d; }
+    .type-badge.trauma    { background: #fee2e2; color: #991b1b; }
+    .type-badge.community { background: #dcfce7; color: #166534; }
+    .beds { font-weight: 600; color: #1a1a2e; }
+    .beds-sub { font-size: 12px; color: #9ca3af; margin-top: 1px; }
+    .rating-stars { color: #f59e0b; font-size: 13px; letter-spacing: 1px; }
+    .rating-num { font-size: 12px; color: #6b7280; margin-left: 4px; }
+    .location-city { font-weight: 500; color: #374151; }
+    .location-state { font-size: 12px; color: #9ca3af; margin-top: 1px; }
+    .action-btn { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 16px; padding: 4px 6px; border-radius: 4px; transition: background 0.1s, color 0.1s; }
+    .action-btn:hover { background: #f3f4f6; color: #4f46e5; }
+    .table-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid #f3f4f6; font-size: 13px; color: #6b7280; }
+    .pagination { display: flex; gap: 4px; }
+    .page-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #e5e7eb; font-size: 13px; cursor: pointer; background: #fff; color: #374151; transition: background 0.1s, border-color 0.1s; }
+    .page-btn:hover { background: #f3f4f6; } .page-btn.active { background: #4f46e5; border-color: #4f46e5; color: #fff; } .page-btn:disabled { opacity: 0.4; cursor: default; }
+    .empty { padding: 60px 20px; text-align: center; color: #9ca3af; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <div class="sidebar-logo">&#9670; Analytics</div>
+      <a href="/dashboard"  class="nav-item"><span class="icon">&#9632;</span> Dashboard</a>
+      <a href="/members"    class="nav-item"><span class="icon">&#9651;</span> Members</a>
+      <a href="/hospitals"  class="nav-item active"><span class="icon">&#10010;</span> Hospitals</a>
+      <a href="/settings"   class="nav-item"><span class="icon">&#9881;</span> Settings</a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Hospitals</div>
+          <div class="page-subtitle">{{ filteredHospitals.length }} hospital{{ filteredHospitals.length !== 1 ? 's' : '' }} found</div>
+        </div>
+        <div class="toolbar">
+          <div class="search-wrap">
+            <span class="icon">&#9906;</span>
+            <input class="search-input" v-model="search" placeholder="Search hospitals…" type="text" />
+          </div>
+          <button class="btn btn-primary">+ Add Hospital</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th @click="sortBy('name')" :class="{ sorted: sortKey === 'name' }">Hospital <span class="sort-icon">{{ sortKey === 'name' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+              <th @click="sortBy('type')" :class="{ sorted: sortKey === 'type' }">Type <span class="sort-icon">{{ sortKey === 'type' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+              <th @click="sortBy('status')" :class="{ sorted: sortKey === 'status' }">Status <span class="sort-icon">{{ sortKey === 'status' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+              <th @click="sortBy('beds')" :class="{ sorted: sortKey === 'beds' }">Beds <span class="sort-icon">{{ sortKey === 'beds' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+              <th @click="sortBy('rating')" :class="{ sorted: sortKey === 'rating' }">Rating <span class="sort-icon">{{ sortKey === 'rating' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+              <th @click="sortBy('city')" :class="{ sorted: sortKey === 'city' }">Location <span class="sort-icon">{{ sortKey === 'city' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+              <th @click="sortBy('established')" :class="{ sorted: sortKey === 'established' }">Est. <span class="sort-icon">{{ sortKey === 'established' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="pagedHospitals.length === 0">
+              <td colspan="8"><div class="empty">No hospitals match your search.</div></td>
+            </tr>
+            <tr v-for="h in pagedHospitals" :key="h.id">
+              <td>
+                <div class="hospital-cell">
+                  <div class="hospital-icon">&#10010;</div>
+                  <div>
+                    <div class="hospital-name">{{ h.name }}</div>
+                    <div class="hospital-id">{{ h.code }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="type-badge" :class="h.typeClass">{{ h.type }}</span></td>
+              <td><span class="badge" :class="'badge-' + h.statusClass">{{ h.status }}</span></td>
+              <td>
+                <div class="beds">{{ h.beds.toLocaleString() }}</div>
+                <div class="beds-sub">{{ h.bedsAvailable }} available</div>
+              </td>
+              <td>
+                <span class="rating-stars">{{ '★'.repeat(Math.round(h.rating)) }}{{ '☆'.repeat(5 - Math.round(h.rating)) }}</span>
+                <span class="rating-num">{{ h.rating.toFixed(1) }}</span>
+              </td>
+              <td>
+                <div class="location-city">{{ h.city }}</div>
+                <div class="location-state">{{ h.state }}, {{ h.country }}</div>
+              </td>
+              <td>{{ h.established }}</td>
+              <td>
+                <button class="action-btn" title="Edit">&#9998;</button>
+                <button class="action-btn" title="Delete">&#10006;</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="table-footer">
+          <span>Showing {{ pageStart }}–{{ pageEnd }} of {{ filteredHospitals.length }}</span>
+          <div class="pagination">
+            <button class="page-btn" :disabled="page === 1" @click="page--">&#8249;</button>
+            <button v-for="p in totalPages" :key="p" class="page-btn" :class="{ active: p === page }" @click="page = p">{{ p }}</button>
+            <button class="page-btn" :disabled="page === totalPages" @click="page++">&#8250;</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    const HOSPITALS = [
+      { id:1,  name:'St. Mary\'s Medical Center',      code:'HSP-001', type:'General',   typeClass:'general',   status:'Active',   statusClass:'active',   beds:850,  bedsAvailable:142, rating:4.7, city:'New York',      state:'NY',  country:'USA',       established:1892 },
+      { id:2,  name:'City Children\'s Hospital',        code:'HSP-002', type:'Children',  typeClass:'children',  status:'Active',   statusClass:'active',   beds:320,  bedsAvailable:58,  rating:4.9, city:'Los Angeles',   state:'CA',  country:'USA',       established:1958 },
+      { id:3,  name:'Northwest Trauma Center',          code:'HSP-003', type:'Trauma',    typeClass:'trauma',    status:'Critical', statusClass:'critical',  beds:200,  bedsAvailable:12,  rating:4.5, city:'Seattle',       state:'WA',  country:'USA',       established:1975 },
+      { id:4,  name:'Greenfield Community Hospital',   code:'HSP-004', type:'Community', typeClass:'community', status:'Active',   statusClass:'active',   beds:150,  bedsAvailable:44,  rating:4.3, city:'Portland',      state:'OR',  country:'USA',       established:1963 },
+      { id:5,  name:'Royal Heart & Vascular Institute',code:'HSP-005', type:'Specialty', typeClass:'specialty', status:'Active',   statusClass:'active',   beds:180,  bedsAvailable:29,  rating:4.8, city:'Houston',       state:'TX',  country:'USA',       established:2001 },
+      { id:6,  name:'Metro General Hospital',          code:'HSP-006', type:'General',   typeClass:'general',   status:'Active',   statusClass:'active',   beds:1200, bedsAvailable:231, rating:4.2, city:'Chicago',       state:'IL',  country:'USA',       established:1910 },
+      { id:7,  name:'Sunrise Oncology Center',         code:'HSP-007', type:'Specialty', typeClass:'specialty', status:'Active',   statusClass:'active',   beds:240,  bedsAvailable:51,  rating:4.6, city:'Miami',         state:'FL',  country:'USA',       established:1988 },
+      { id:8,  name:'Valley Community Clinic',         code:'HSP-008', type:'Community', typeClass:'community', status:'Inactive', statusClass:'inactive', beds:90,   bedsAvailable:0,   rating:3.8, city:'Phoenix',       state:'AZ',  country:'USA',       established:1972 },
+      { id:9,  name:'St. Luke\'s University Hospital', code:'HSP-009', type:'General',   typeClass:'general',   status:'Active',   statusClass:'active',   beds:950,  bedsAvailable:178, rating:4.5, city:'Philadelphia',  state:'PA',  country:'USA',       established:1884 },
+      { id:10, name:'Pacific Neuroscience Institute',  code:'HSP-010', type:'Specialty', typeClass:'specialty', status:'Active',   statusClass:'active',   beds:160,  bedsAvailable:33,  rating:4.9, city:'San Francisco', state:'CA',  country:'USA',       established:2005 },
+      { id:11, name:'Eastside Pediatric Hospital',     code:'HSP-011', type:'Children',  typeClass:'children',  status:'Active',   statusClass:'active',   beds:280,  bedsAvailable:64,  rating:4.7, city:'Boston',        state:'MA',  country:'USA',       established:1946 },
+      { id:12, name:'Central Trauma & Emergency',      code:'HSP-012', type:'Trauma',    typeClass:'trauma',    status:'Active',   statusClass:'active',   beds:310,  bedsAvailable:47,  rating:4.4, city:'Dallas',        state:'TX',  country:'USA',       established:1990 },
+    ];
+
+    const PER_PAGE = 8;
+
+    createApp({
+      setup() {
+        const search  = ref('');
+        const sortKey = ref('name');
+        const sortDir = ref('asc');
+        const page    = ref(1);
+
+        function sortBy(key) {
+          if (sortKey.value === key) {
+            sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortKey.value = key;
+            sortDir.value = 'asc';
+          }
+          page.value = 1;
+        }
+
+        const filteredHospitals = computed(() => {
+          const q = search.value.toLowerCase();
+          const list = q
+            ? HOSPITALS.filter(h =>
+                h.name.toLowerCase().includes(q) ||
+                h.code.toLowerCase().includes(q) ||
+                h.type.toLowerCase().includes(q) ||
+                h.city.toLowerCase().includes(q) ||
+                h.state.toLowerCase().includes(q)
+              )
+            : [...HOSPITALS];
+
+          list.sort((a, b) => {
+            const av = a[sortKey.value] ?? '';
+            const bv = b[sortKey.value] ?? '';
+            if (typeof av === 'number' && typeof bv === 'number') {
+              return sortDir.value === 'asc' ? av - bv : bv - av;
+            }
+            return sortDir.value === 'asc'
+              ? String(av).localeCompare(String(bv))
+              : String(bv).localeCompare(String(av));
+          });
+          return list;
+        });
+
+        const totalPages = computed(() => Math.max(1, Math.ceil(filteredHospitals.value.length / PER_PAGE)));
+
+        const pagedHospitals = computed(() => {
+          const start = (page.value - 1) * PER_PAGE;
+          return filteredHospitals.value.slice(start, start + PER_PAGE);
+        });
+
+        const pageStart = computed(() => filteredHospitals.value.length === 0 ? 0 : (page.value - 1) * PER_PAGE + 1);
+        const pageEnd   = computed(() => Math.min(page.value * PER_PAGE, filteredHospitals.value.length));
+
+        return { search, sortKey, sortDir, page, filteredHospitals, pagedHospitals, totalPages, pageStart, pageEnd, sortBy };
+      },
+    }).mount('#app');
+  </script>
+</body>
+</html>
+{% endraw %}
